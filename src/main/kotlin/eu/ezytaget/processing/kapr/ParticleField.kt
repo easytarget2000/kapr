@@ -22,18 +22,20 @@ class ParticleField(private val firstParticle: Particle) {
 
             val originX = worldWidth / 2f
             val originY = worldHeight / 2f
-            val offsetLength = smallestWorldLength / 32f
+            val offsetLength = 16f
             val twoPi = PI.toFloat() * 2f
-            val maxParticleJitter = smallestWorldLength / 128f
+            val maxParticleJitter = smallestWorldLength / 256f
             val particleRadius = smallestWorldLength / 256f
-            val particlePushForce = smallestWorldLength * 0.0047f
+            val particlePushForce = smallestWorldLength * 0.01f
             val particleGravityToNext = -particleRadius * 0.5f
-            val preferredParticleDistanceToNext = smallestWorldLength / 128f
-            val maxParticleInteractionDistance = smallestWorldLength / 8f
+            val maxParticleInteractionDistance = smallestWorldLength / 4f
 
             var lastParticle: Particle? = null
             for (particleIndex in 0 until numberOfParticles) {
-                val progress = particleIndex.toFloat() / (numberOfParticles.toFloat() - 1f)
+                val progress = particleIndex.toFloat() / numberOfParticles.toFloat()
+                if (VERBOSE) {
+                    println("ParticleField.Builder: build(): progress: $progress")
+                }
                 val offsetX = offsetLength * cos(x = progress * twoPi)
                 val offsetY = offsetLength * sin(x = progress * twoPi)
 
@@ -44,37 +46,57 @@ class ParticleField(private val firstParticle: Particle) {
                         radius = particleRadius,
                         pushForce = particlePushForce,
                         gravityToNext = particleGravityToNext,
-                        preferredDistanceToNext = preferredParticleDistanceToNext,
+                        preferredDistanceToNext = 0f,   // Will be set later.
                         maxInteractionDistance = maxParticleInteractionDistance,
                         maxJitter = maxParticleJitter
                 )
 
                 if (firstParticle == null) {
                     firstParticle = particle
+                    if (VERBOSE) {
+                        println("ParticleField.Builder: build(): firstParticle: $firstParticle")
+                    }
                 } else {
                     lastParticle!!.next = particle
+                    particle.preferredDistanceToNext =
+                            particle.position.dist(lastParticle.position) * PREFERRED_DISTANCE_PUSH_FACTOR
+
+                    if (VERBOSE) {
+                        println("ParticleField.Builder: build(): particle: $particle")
+                    }
                 }
 
                 lastParticle = particle
             }
 
             lastParticle!!.next = firstParticle!!
+            firstParticle.preferredDistanceToNext =
+                    firstParticle.position.dist(lastParticle.position) * PREFERRED_DISTANCE_PUSH_FACTOR
+            println("ParticleField.Builder: build(): firstParticle: $firstParticle")
 
             return ParticleField(firstParticle)
         }
     }
 
-    fun updateAndDraw(pApplet: PApplet, random: Random) {
+    fun updateAndDraw(pApplet: PApplet, maxColorValue: Float, random: Random, rounds: Int) {
+        pApplet.stroke(maxColorValue)
+        pApplet.strokeWeight(2f)
+        for (i in 0 until rounds) {
+            updateAndDrawOnce(pApplet, maxColorValue, random)
+        }
+    }
+
+    fun updateAndDrawOnce(pApplet: PApplet, maxColorValue: Float, random: Random) {
         var currentParticle = firstParticle
         do {
-            draw(currentParticle, pApplet)
             update(currentParticle, random)
+            draw(currentParticle, pApplet)
             currentParticle = currentParticle.next
         } while (currentParticle != firstParticle)
     }
 
     private fun update(particle: Particle, random: Random) {
-        particle.update(firstParticle = firstParticle, random = random)
+        particle.update(random = random)
     }
 
     private fun draw(particle: Particle, pApplet: PApplet) {
@@ -85,6 +107,8 @@ class ParticleField(private val firstParticle: Particle) {
     }
 
     companion object {
-        private val debugDrawIDs = listOf<Int>()
+        private const val VERBOSE = true
+        private const val PREFERRED_DISTANCE_PUSH_FACTOR = 1.01f
+        private var debugDrawIDs = listOf<Int>()
     }
 }
