@@ -1,10 +1,13 @@
 package eu.ezytaget.processing.kapr
 
 import processing.core.PConstants
+import kotlin.random.Random
 
 class PApplet : processing.core.PApplet() {
 
     private lateinit var particleField: ParticleField
+
+    private val random = Random(seed = 0)
 
     override fun settings() {
         size(WIDTH, HEIGHT, RENDERER)
@@ -15,7 +18,7 @@ class PApplet : processing.core.PApplet() {
     }
 
     override fun draw() {
-        particleField.updateAndDraw(this)
+        particleField.updateAndDraw(pApplet = this, random = random)
     }
 
     private fun initParticleField() {
