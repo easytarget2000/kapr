@@ -14,6 +14,7 @@ class PApplet : processing.core.PApplet() {
     }
 
     override fun setup() {
+        frameRate(FRAME_RATE)
         initParticleField()
     }
 
@@ -25,7 +26,7 @@ class PApplet : processing.core.PApplet() {
         particleField = ParticleField.Builder().apply {
             worldWidth = width.toFloat()
             worldHeight = height.toFloat()
-            numberOfParticles = 128
+            numberOfParticles = NUMBER_OF_PARTICLES_PER_FIELD
         }.build()
     }
 
@@ -33,6 +34,8 @@ class PApplet : processing.core.PApplet() {
         private const val WIDTH = 800
         private const val HEIGHT = 600
         private const val RENDERER = PConstants.P3D
+        private const val FRAME_RATE = 60f
+        private const val NUMBER_OF_PARTICLES_PER_FIELD = 64
 
         fun runInstance() {
             val instance = PApplet()
