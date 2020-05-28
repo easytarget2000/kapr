@@ -60,7 +60,7 @@ class ParticleField(private val firstParticle: Particle) {
     }
 
     private fun update(particle: Particle, random: Random) {
-        particle.update(random = random)
+        particle.update(firstParticle = firstParticle, random = random)
     }
 
     private fun draw(particle: Particle, pApplet: PApplet) {

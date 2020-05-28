@@ -6,16 +6,28 @@ import kotlin.random.Random
 data class Particle(
         val id: Int,
         val position: PVector,
-        val velocity: PVector = PVector(0f, 0f, 0f),
         val maxJitter: Float,
         var next: Particle? = null
 ) {
-
     private val maxJitterHalf = maxJitter / 2f
 
-    fun update(random: Random) {
-        position.add(velocity)
+    fun update(firstParticle: Particle, random: Random) {
         position.add(jitter(random))
+
+        val velocity = PVector(0f, 0f, 0f)
+        var currentParticle = firstParticle
+        do {
+            if (currentParticle == this) {
+                currentParticle = currentParticle.next!!
+                continue
+            }
+
+
+
+            currentParticle = currentParticle.next!!
+        } while (currentParticle != this)
+
+        position.add(velocity)
     }
 
     private fun jitter(random: Random) = PVector(
