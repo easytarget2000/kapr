@@ -11,9 +11,7 @@ class PApplet : processing.core.PApplet() {
 
     private var waitingForClickToDraw = false
 
-    private var mouseMoved = true
-
-    private var numberOfSlices = 128
+    private var numberOfSlices = 1
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -110,7 +108,7 @@ class PApplet : processing.core.PApplet() {
         private const val COLOR_MODE = PConstants.HSB
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
-        private const val NUMBER_OF_PARTICLES_PER_FIELD = 128
+        private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
         private const val CLEAR_FRAME_ON_DRAW = true
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'

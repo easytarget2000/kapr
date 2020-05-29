@@ -26,7 +26,7 @@ class ParticleField(private val firstParticle: Particle) {
             val twoPi = PI.toFloat() * 2f
             val maxParticleJitter = smallestWorldLength / 256f
             val particleRadius = smallestWorldLength / 256f
-            val particlePushForce = particleRadius / 2f
+            val particlePushForce = particleRadius * 2f
             val particleGravityToNext = -particleRadius * 0.5f
             val maxParticleInteractionDistance = smallestWorldLength / 4f
 
@@ -80,9 +80,20 @@ class ParticleField(private val firstParticle: Particle) {
 
     var particleAlpha = 0.5f
 
+    var addParticleProbability = 1f / 100f
+
+    var maxNumOfParticles: Int = 768
+
     fun update(random: Random) {
+        var counter = 0
         var currentParticle = firstParticle
         do {
+            if (++counter < maxNumOfParticles && addParticle(random)) {
+                val newParticle = currentParticle.copy(id = random.nextInt())
+                newParticle.next = currentParticle.next
+                currentParticle.next = newParticle
+            }
+
             update(currentParticle, random)
             currentParticle = currentParticle.next
         } while (currentParticle != firstParticle)
@@ -107,6 +118,8 @@ class ParticleField(private val firstParticle: Particle) {
         }
         pApplet.point(particle.position.x, particle.position.y)
     }
+
+    private fun addParticle(random: Random) = random.nextFloat() < addParticleProbability
 
     companion object {
         private const val VERBOSE = true
