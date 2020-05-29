@@ -1,5 +1,6 @@
 package eu.ezytaget.processing.kapr
 
+import eu.ezytaget.processing.kapr.palettes.DuskPalette
 import processing.core.PConstants
 import kotlin.random.Random
 
@@ -11,7 +12,9 @@ class PApplet : processing.core.PApplet() {
 
     private var waitingForClickToDraw = false
 
-    private var numberOfSlices = 1
+    private var numberOfSlices = 256
+
+    private val backgroundDrawer = BackgroundDrawer(DuskPalette())
 
     override fun settings() {
         if (FULL_SCREEN) {

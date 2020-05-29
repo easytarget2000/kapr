@@ -80,12 +80,13 @@ class ParticleField(private val firstParticle: Particle) {
 
     var particleAlpha = 0.5f
 
-    var addParticleProbability = 1f / 100f
+    var addParticleProbability = 1f / 1000f
 
     var maxNumOfParticles: Int = 768
 
     fun update(random: Random) {
         var counter = 0
+
         var currentParticle = firstParticle
         do {
             if (++counter < maxNumOfParticles && addParticle(random)) {
