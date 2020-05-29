@@ -11,6 +11,10 @@ class PApplet : processing.core.PApplet() {
 
     private var waitingForClickToDraw = false
 
+    private var mouseMoved = true
+
+    private var numberOfSlices = 128
+
     override fun settings() {
         if (FULL_SCREEN) {
             fullScreen(RENDERER)
@@ -23,7 +27,8 @@ class PApplet : processing.core.PApplet() {
         frameRate(FRAME_RATE)
         colorMode(COLOR_MODE, MAX_COLOR_VALUE)
         initParticleField()
-        background(0)
+        clearFrame()
+        noCursor()
     }
 
     override fun draw() {
@@ -31,16 +36,11 @@ class PApplet : processing.core.PApplet() {
             return
         }
 
-        if (CLEAR) {
-            background(0)
+        if (CLEAR_FRAME_ON_DRAW) {
+            clearFrame()
         }
 
-        particleField.updateAndDraw(
-                pApplet = this,
-                maxColorValue = MAX_COLOR_VALUE,
-                random = random,
-                rounds = ROUNDS_PER_DRAW_CALL
-        )
+        updateAndDrawParticleField()
 
         if (CLICK_TO_DRAW) {
             waitingForClickToDraw = true
@@ -49,8 +49,14 @@ class PApplet : processing.core.PApplet() {
 
     override fun keyPressed() {
         when (key) {
-            RESET_KEY -> {
-                background(0)
+            CLEAR_FRAME_KEY -> {
+                clearFrame()
+            }
+            INIT_PARTICLE_FIELD_KEY -> {
+                initParticleField()
+            }
+            CLEAR_INIT_KEY -> {
+                clearFrame()
                 initParticleField()
             }
         }
@@ -62,12 +68,37 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
+    override fun mouseMoved() {
+    }
+
+    private fun clearFrame() {
+        background(0)
+    }
+
     private fun initParticleField() {
         particleField = ParticleField.Builder().apply {
             worldWidth = width.toFloat()
             worldHeight = height.toFloat()
             numberOfParticles = NUMBER_OF_PARTICLES_PER_FIELD
         }.build()
+    }
+
+    private fun updateAndDrawParticleField() {
+        particleField.update(random)
+
+        val yRotationOffset = frameCount.toFloat() / 10000f
+
+        for (sliceIndex in 0 until numberOfSlices) {
+            val yRotation = (sliceIndex.toFloat() / numberOfSlices.toFloat() * PConstants.TWO_PI) + yRotationOffset
+            translate(width / 2f, height / 2f, 0f)
+            rotateY(yRotation)
+            translate(-width / 2f, -height / 2f, 0f)
+
+            particleField.draw(
+                    pApplet = this,
+                    maxColorValue = MAX_COLOR_VALUE
+            )
+        }
     }
 
     companion object {
@@ -79,10 +110,11 @@ class PApplet : processing.core.PApplet() {
         private const val COLOR_MODE = PConstants.HSB
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
-        private const val NUMBER_OF_PARTICLES_PER_FIELD = 512
-        private const val CLEAR = true
-        private const val RESET_KEY = ' '
-        private const val ROUNDS_PER_DRAW_CALL = 8
+        private const val NUMBER_OF_PARTICLES_PER_FIELD = 128
+        private const val CLEAR_FRAME_ON_DRAW = true
+        private const val CLEAR_FRAME_KEY = 'x'
+        private const val INIT_PARTICLE_FIELD_KEY = 'z'
+        private const val CLEAR_INIT_KEY = ' '
 
         fun runInstance() {
             val instance = PApplet()

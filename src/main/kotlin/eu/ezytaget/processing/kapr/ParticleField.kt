@@ -26,7 +26,7 @@ class ParticleField(private val firstParticle: Particle) {
             val twoPi = PI.toFloat() * 2f
             val maxParticleJitter = smallestWorldLength / 256f
             val particleRadius = smallestWorldLength / 256f
-            val particlePushForce = smallestWorldLength * 0.01f
+            val particlePushForce = particleRadius / 2f
             val particleGravityToNext = -particleRadius * 0.5f
             val maxParticleInteractionDistance = smallestWorldLength / 4f
 
@@ -78,18 +78,20 @@ class ParticleField(private val firstParticle: Particle) {
         }
     }
 
-    fun updateAndDraw(pApplet: PApplet, maxColorValue: Float, random: Random, rounds: Int) {
-        pApplet.stroke(maxColorValue)
-        pApplet.strokeWeight(2f)
-        for (i in 0 until rounds) {
-            updateAndDrawOnce(pApplet, maxColorValue, random)
-        }
-    }
+    var particleAlpha = 0.5f
 
-    fun updateAndDrawOnce(pApplet: PApplet, maxColorValue: Float, random: Random) {
+    fun update(random: Random) {
         var currentParticle = firstParticle
         do {
             update(currentParticle, random)
+            currentParticle = currentParticle.next
+        } while (currentParticle != firstParticle)
+    }
+
+    fun draw(pApplet: PApplet, maxColorValue: Float) {
+        pApplet.stroke(maxColorValue, particleAlpha)
+        var currentParticle = firstParticle
+        do {
             draw(currentParticle, pApplet)
             currentParticle = currentParticle.next
         } while (currentParticle != firstParticle)
