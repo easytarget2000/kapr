@@ -38,7 +38,7 @@ class PApplet : processing.core.PApplet() {
         }
 
         if (DRAW_BACKGROUND_ON_DRAW) {
-            background(1f, 1f, 1f, 0.01f)
+            backgroundDrawer.draw(pApplet = this)
         }
 
         updateAndDrawParticleField()
@@ -76,7 +76,7 @@ class PApplet : processing.core.PApplet() {
         backgroundDrawer.drawRandomColor(
                 pApplet = this,
                 random = random,
-                alpha = 0.01f
+                alpha = 1f
         )
     }
 
@@ -117,7 +117,7 @@ class PApplet : processing.core.PApplet() {
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
-        private const val DRAW_BACKGROUND_ON_DRAW = false
+        private const val DRAW_BACKGROUND_ON_DRAW = true
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
         private const val CLEAR_INIT_KEY = ' '

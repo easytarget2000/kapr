@@ -79,7 +79,7 @@ class ParticleField(private val firstParticle: Particle) {
         }
     }
 
-    var particleAlpha = 0.01f
+    var particleAlpha = 0.1f
 
     var addParticleProbability = 1f / 1000f
 
@@ -102,7 +102,7 @@ class ParticleField(private val firstParticle: Particle) {
     }
 
     fun draw(pApplet: PApplet, maxColorValue: Float, drawLine: Boolean) {
-        pApplet.stroke(0f, particleAlpha)
+        pApplet.stroke(1f, particleAlpha)
         if (drawLine) {
             pApplet.beginShape(LINES)
         }

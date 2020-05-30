@@ -3,7 +3,7 @@ package eu.ezytaget.processing.kapr
 import eu.ezytaget.processing.kapr.palettes.Palette
 import kotlin.random.Random
 
-class BackgroundDrawer(private val palette: Palette, var alpha: Float = 0f) {
+class BackgroundDrawer(private val palette: Palette, var alpha: Float = 0.1f) {
 
     var rgbColor: Int = 0
 
@@ -13,7 +13,12 @@ class BackgroundDrawer(private val palette: Palette, var alpha: Float = 0f) {
     }
 
     fun draw(pApplet: PApplet, alpha: Float = this.alpha) {
-        // CONTINUE HERE
-        pApplet.background(this.rgbColor, 10f)
+        if (alpha < 1f) {
+            pApplet.noStroke()
+            pApplet.fill(pApplet.hue(rgbColor), pApplet.saturation(rgbColor), pApplet.saturation(rgbColor), alpha)
+            pApplet.rect(0f, 0f, pApplet.width.toFloat(), pApplet.height.toFloat())
+        } else {
+            pApplet.background(rgbColor)
+        }
     }
 }
