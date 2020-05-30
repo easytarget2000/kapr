@@ -12,9 +12,9 @@ class PApplet : processing.core.PApplet() {
 
     private var waitingForClickToDraw = false
 
-    private var numberOfSlices = 256
+    private var numberOfSlices = 128
 
-    private val backgroundDrawer = BackgroundDrawer(DuskPalette())
+    private val backgroundDrawer = BackgroundDrawer(DuskPalette(), alpha = 0.01f)
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -37,8 +37,8 @@ class PApplet : processing.core.PApplet() {
             return
         }
 
-        if (CLEAR_FRAME_ON_DRAW) {
-            clearFrame()
+        if (DRAW_BACKGROUND_ON_DRAW) {
+            background(1f, 1f, 1f, 0.01f)
         }
 
         updateAndDrawParticleField()
@@ -73,7 +73,11 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun clearFrame() {
-        background(0)
+        backgroundDrawer.drawRandomColor(
+                pApplet = this,
+                random = random,
+                alpha = 0.01f
+        )
     }
 
     private fun initParticleField() {
@@ -97,7 +101,8 @@ class PApplet : processing.core.PApplet() {
 
             particleField.draw(
                     pApplet = this,
-                    maxColorValue = MAX_COLOR_VALUE
+                    maxColorValue = MAX_COLOR_VALUE,
+                    drawLine = true
             )
         }
     }
@@ -112,7 +117,7 @@ class PApplet : processing.core.PApplet() {
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
-        private const val CLEAR_FRAME_ON_DRAW = true
+        private const val DRAW_BACKGROUND_ON_DRAW = false
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
         private const val CLEAR_INIT_KEY = ' '

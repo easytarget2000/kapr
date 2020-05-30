@@ -1,5 +1,6 @@
 package eu.ezytaget.processing.kapr
 
+import processing.core.PConstants.LINES
 import processing.core.PVector
 import kotlin.math.PI
 import kotlin.math.cos
@@ -78,7 +79,7 @@ class ParticleField(private val firstParticle: Particle) {
         }
     }
 
-    var particleAlpha = 0.5f
+    var particleAlpha = 0.01f
 
     var addParticleProbability = 1f / 1000f
 
@@ -100,24 +101,34 @@ class ParticleField(private val firstParticle: Particle) {
         } while (currentParticle != firstParticle)
     }
 
-    fun draw(pApplet: PApplet, maxColorValue: Float) {
-        pApplet.stroke(maxColorValue, particleAlpha)
+    fun draw(pApplet: PApplet, maxColorValue: Float, drawLine: Boolean) {
+        pApplet.stroke(0f, particleAlpha)
+        if (drawLine) {
+            pApplet.beginShape(LINES)
+        }
         var currentParticle = firstParticle
         do {
-            draw(currentParticle, pApplet)
+            if (drawLine) {
+                pApplet.vertex(currentParticle.position.x, currentParticle.position.y)
+            } else {
+                drawPoint(currentParticle, pApplet)
+            }
             currentParticle = currentParticle.next
         } while (currentParticle != firstParticle)
+
+        if (drawLine) {
+            pApplet.endShape()
+        }
     }
 
     private fun update(particle: Particle, random: Random) {
         particle.update(random = random)
     }
 
-    private fun draw(particle: Particle, pApplet: PApplet) {
+    private fun drawPoint(particle: Particle, pApplet: PApplet) {
         if (debugDrawIDs.isNotEmpty() && !debugDrawIDs.contains(particle.id)) {
             return
         }
-        pApplet.point(particle.position.x, particle.position.y)
     }
 
     private fun addParticle(random: Random) = random.nextFloat() < addParticleProbability
