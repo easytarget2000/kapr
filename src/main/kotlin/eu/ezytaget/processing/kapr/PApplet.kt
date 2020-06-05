@@ -1,5 +1,7 @@
 package eu.ezytaget.processing.kapr
 
+import eu.ezytaget.processing.kapr.metronome.BeatDuration
+import eu.ezytaget.processing.kapr.metronome.Metronome
 import eu.ezytaget.processing.kapr.palettes.DuskPalette
 import processing.core.PConstants
 import kotlin.random.Random
@@ -10,11 +12,17 @@ class PApplet : processing.core.PApplet() {
 
     private val random = Random(seed = 0)
 
+    private val metronome = Metronome()
+
     private var waitingForClickToDraw = false
 
     private var numberOfSlices = 128
 
     private val backgroundDrawer = BackgroundDrawer(DuskPalette(), alpha = 0.01f)
+
+    private var particleGray = 0f
+
+    private val particleAlpha = 0.01f
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -30,6 +38,14 @@ class PApplet : processing.core.PApplet() {
         initParticleField()
         clearFrame()
         noCursor()
+        metronome.steadyListener = object : Metronome.SteadyListener {
+            override fun onBeat(duration: BeatDuration) {
+                if (duration == BeatDuration.OctupleWhole) {
+                    clearFrame()
+                }
+            }
+        }
+        metronome.start()
     }
 
     override fun draw() {
@@ -40,6 +56,8 @@ class PApplet : processing.core.PApplet() {
         if (DRAW_BACKGROUND_ON_DRAW) {
             backgroundDrawer.draw(pApplet = this)
         }
+
+        metronome.update()
 
         updateAndDrawParticleField()
 
@@ -59,6 +77,7 @@ class PApplet : processing.core.PApplet() {
             CLEAR_INIT_KEY -> {
                 clearFrame()
                 initParticleField()
+                metronome.start()
             }
         }
     }
@@ -93,15 +112,23 @@ class PApplet : processing.core.PApplet() {
 
         val yRotationOffset = frameCount.toFloat() / 10000f
 
+        if (random.nextFloat() < CHANGE_PARTICLE_GRAY_PROBABILITY) {
+            particleGray = if (random.nextBoolean()) {
+                0f
+            } else {
+                MAX_COLOR_VALUE
+            }
+        }
+        stroke(particleGray, particleAlpha)
+
         for (sliceIndex in 0 until numberOfSlices) {
             val yRotation = (sliceIndex.toFloat() / numberOfSlices.toFloat() * PConstants.TWO_PI) + yRotationOffset
             translate(width / 2f, height / 2f, 0f)
             rotateY(yRotation)
             translate(-width / 2f, -height / 2f, 0f)
 
-            particleField.draw(
+            particleField.drawConfigured(
                     pApplet = this,
-                    maxColorValue = MAX_COLOR_VALUE,
                     drawLine = true
             )
         }
@@ -118,6 +145,7 @@ class PApplet : processing.core.PApplet() {
         private const val FRAME_RATE = 60f
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
         private const val DRAW_BACKGROUND_ON_DRAW = true
+        private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0.01f
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
         private const val CLEAR_INIT_KEY = ' '

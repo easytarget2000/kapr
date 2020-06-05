@@ -101,8 +101,7 @@ class ParticleField(private val firstParticle: Particle) {
         } while (currentParticle != firstParticle)
     }
 
-    fun draw(pApplet: PApplet, maxColorValue: Float, drawLine: Boolean) {
-        pApplet.stroke(1f, particleAlpha)
+    fun drawConfigured(pApplet: PApplet, drawLine: Boolean) {
         if (drawLine) {
             pApplet.beginShape(LINES)
         }
