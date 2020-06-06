@@ -1,7 +1,7 @@
 package eu.ezytaget.processing.kapr
 
-import eu.ezytaget.processing.kapr.metronome.BeatDuration
-import eu.ezytaget.processing.kapr.metronome.Metronome
+import eu.ezytaget.processing.kapr.metronome.BeatInterval
+import eu.ezytaget.processing.kapr.metronome.BeatMetronome
 import eu.ezytaget.processing.kapr.palettes.DuskPalette
 import processing.core.PConstants
 import kotlin.random.Random
@@ -12,7 +12,7 @@ class PApplet : processing.core.PApplet() {
 
     private val random = Random(seed = 0)
 
-    private val metronome = Metronome()
+    private val metronome = BeatMetronome()
 
     private var waitingForClickToDraw = false
 
@@ -38,11 +38,9 @@ class PApplet : processing.core.PApplet() {
         initParticleField()
         clearFrameWithRandomColor()
         noCursor()
-        metronome.steadyListener = object : Metronome.SteadyListener {
-            override fun onBeat(duration: BeatDuration) {
-                if (duration == BeatDuration.OctupleWhole) {
-                    clearFrameWithRandomColor()
-                }
+        metronome.listener = object : BeatMetronome.Listener {
+            override fun onIntervalNumbersChanged(intervalNumbers: Map<BeatInterval, Int>) {
+                showBeatCounter(intervalNumbers)
             }
         }
         metronome.start()
@@ -138,6 +136,23 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
+    private fun showBeatCounter(intervalNumbers: Map<BeatInterval, Int>) {
+        val numberOfTicksForWhole = BeatInterval.Whole.numberOfTicks
+        var formattedCounter = ""
+
+        formattedCounter += intervalNumbers[BeatInterval.FourWhole]?.plus(1)
+        formattedCounter += BEAT_COUNTER_DIVIDER
+        formattedCounter += intervalNumbers[BeatInterval.Whole]?.rem(4)?.plus(1)
+//        print(BEAT_COUNTER_DIVIDER)
+//        print(intervalNumbers[BeatInterval.Half])
+//        print(BEAT_COUNTER_DIVIDER)
+//        print(intervalNumbers[BeatInterval.Eigth])
+        formattedCounter += BEAT_COUNTER_DIVIDER
+        formattedCounter += intervalNumbers[BeatInterval.Sixteenth]?.rem(16)?.plus(1)
+
+        println(formattedCounter)
+    }
+
     companion object {
         private const val CLICK_TO_DRAW = false
         private const val FULL_SCREEN = true
@@ -153,6 +168,7 @@ class PApplet : processing.core.PApplet() {
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
         private const val CLEAR_INIT_KEY = ' '
+        private const val BEAT_COUNTER_DIVIDER = '.'
 
         fun runInstance() {
             val instance = PApplet()
