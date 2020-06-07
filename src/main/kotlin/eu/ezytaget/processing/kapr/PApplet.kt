@@ -32,6 +32,8 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
+    private var lastBarCount = 0
+
     override fun setup() {
         frameRate(FRAME_RATE)
         colorMode(COLOR_MODE, MAX_COLOR_VALUE)
@@ -40,7 +42,10 @@ class PApplet : processing.core.PApplet() {
         noCursor()
         metronome.listener = object : BeatMetronome.Listener {
             override fun onIntervalNumbersChanged(intervalNumbers: Map<BeatInterval, Int>) {
-                showBeatCounter(intervalNumbers)
+                if (lastBarCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
+                    clearFrame()
+                    lastBarCount = intervalNumbers.getValue(BeatInterval.FourWhole)
+                }
             }
         }
         metronome.start()
@@ -137,20 +142,18 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun showBeatCounter(intervalNumbers: Map<BeatInterval, Int>) {
-        val numberOfTicksForWhole = BeatInterval.Whole.numberOfTicks
         var formattedCounter = ""
 
-        formattedCounter += intervalNumbers[BeatInterval.FourWhole]?.plus(1)
-        formattedCounter += BEAT_COUNTER_DIVIDER
         formattedCounter += intervalNumbers[BeatInterval.Whole]?.rem(4)?.plus(1)
-//        print(BEAT_COUNTER_DIVIDER)
-//        print(intervalNumbers[BeatInterval.Half])
-//        print(BEAT_COUNTER_DIVIDER)
-//        print(intervalNumbers[BeatInterval.Eigth])
+        formattedCounter += BEAT_COUNTER_DIVIDER
+        formattedCounter += intervalNumbers[BeatInterval.Eigth]?.rem(8)?.plus(1)
         formattedCounter += BEAT_COUNTER_DIVIDER
         formattedCounter += intervalNumbers[BeatInterval.Sixteenth]?.rem(16)?.plus(1)
 
-        println(formattedCounter)
+        noStroke()
+        fill(0.5f, 0.1f)
+        textSize(height.toFloat())
+        text(formattedCounter, 0f, height.toFloat())
     }
 
     companion object {
@@ -168,7 +171,7 @@ class PApplet : processing.core.PApplet() {
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
         private const val CLEAR_INIT_KEY = ' '
-        private const val BEAT_COUNTER_DIVIDER = '.'
+        private const val BEAT_COUNTER_DIVIDER = ' '
 
         fun runInstance() {
             val instance = PApplet()

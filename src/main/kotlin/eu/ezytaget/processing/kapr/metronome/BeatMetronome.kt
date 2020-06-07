@@ -10,7 +10,7 @@ class BeatMetronome {
 
     var listener: Listener? = null
 
-    private var bpm = 108f
+    private var bpm = 150f
         set(value) {
             field = value
             initTickLengthMillis()

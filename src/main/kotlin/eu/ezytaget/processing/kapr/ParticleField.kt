@@ -23,7 +23,7 @@ class ParticleField(private val firstParticle: Particle) {
 
             val originX = worldWidth / 2f
             val originY = worldHeight / 2f
-            val offsetLength = 16f
+            val offsetLength = smallestWorldLength / 8f
             val twoPi = PI.toFloat() * 2f
             val maxParticleJitter = smallestWorldLength / 256f
             val particleRadius = smallestWorldLength / 256f
