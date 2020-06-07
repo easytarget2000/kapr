@@ -24,6 +24,8 @@ class PApplet : processing.core.PApplet() {
 
     private val particleAlpha = 0.01f
 
+    private var clearOnTap = true
+
     override fun settings() {
         if (FULL_SCREEN) {
             fullScreen(RENDERER)
@@ -78,7 +80,7 @@ class PApplet : processing.core.PApplet() {
                 metronome.start()
             }
             TAP_BPM_KEY -> {
-                metronome.tapBpm()
+                tapBpm()
             }
         }
     }
@@ -136,6 +138,14 @@ class PApplet : processing.core.PApplet() {
                     pApplet = this,
                     drawLine = true
             )
+        }
+    }
+
+    private fun tapBpm() {
+        metronome.tapBpm()
+
+        if (clearOnTap) {
+            clearFrame()
         }
     }
 

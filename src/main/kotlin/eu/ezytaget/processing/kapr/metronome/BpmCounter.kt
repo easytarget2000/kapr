@@ -16,8 +16,7 @@ class BpmCounter {
         clearLastTapMillisIfExpired(tapMillis)
         lastTapMillis.add(tapMillis)
         val bpmFromTaps = bpmFromLastTapMillis() ?: return null
-
-        clearLastTapMillis()
+        
         return bpmFromTaps
     }
 
