@@ -4,16 +4,15 @@ import kotlin.math.floor
 
 class BeatMetronome {
 
-    interface Listener {
-        fun onIntervalNumbersChanged(intervalNumbers: Map<BeatInterval, Int>)
-    }
+    private val bpmCounter = BpmCounter()
 
-    var listener: Listener? = null
-
-    private var bpm = 150f
+    var bpm = 150f
         set(value) {
             field = value
             initTickLengthMillis()
+            if (VERBOSE) {
+                println("DEBUG: BeatMetronome: bpm: $bpm")
+            }
         }
 
     private var startMillis = nowMillis
@@ -25,24 +24,33 @@ class BeatMetronome {
 
     private var tickLengthMillis = 0L
 
+    lateinit var intervalNumbers: Map<BeatInterval, Int>
+
     fun start() {
         startMillis = nowMillis
         initTickLengthMillis()
     }
 
-    fun update() {
+    fun update(): Boolean {
         val nowMillis = nowMillis
         val numberOfTicks = ((nowMillis - startMillis) / tickLengthMillis).toInt()
         if (numberOfTicks == numberOfAcknowledgedTicks) {
-            return
+            return false
         }
 
         numberOfAcknowledgedTicks = numberOfTicks
-        val intervalNumbers = intervals.map {
+        intervalNumbers = intervals.map {
             it to floor(numberOfAcknowledgedTicks.toDouble() / it.numberOfTicks.toDouble()).toInt()
         }.toMap()
 
-        listener?.onIntervalNumbersChanged(intervalNumbers)
+        return true
+    }
+
+    fun tapBpm() {
+        val tappedBpm = bpmCounter.tap(nowMillis)
+        if (tappedBpm != null) {
+            bpm = tappedBpm
+        }
     }
 
     private fun initTickLengthMillis() {

@@ -40,14 +40,6 @@ class PApplet : processing.core.PApplet() {
         initParticleField()
         clearFrameWithRandomColor()
         noCursor()
-        metronome.listener = object : BeatMetronome.Listener {
-            override fun onIntervalNumbersChanged(intervalNumbers: Map<BeatInterval, Int>) {
-                if (lastBarCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
-                    clearFrame()
-                    lastBarCount = intervalNumbers.getValue(BeatInterval.FourWhole)
-                }
-            }
-        }
         metronome.start()
     }
 
@@ -60,7 +52,10 @@ class PApplet : processing.core.PApplet() {
             backgroundDrawer.draw(pApplet = this)
         }
 
-        metronome.update()
+        val metronomeDidAdvance = metronome.update()
+        if (metronomeDidAdvance) {
+            handleMetronomeValue()
+        }
 
         updateAndDrawParticleField()
 
@@ -81,6 +76,9 @@ class PApplet : processing.core.PApplet() {
                 clearFrameWithRandomColor()
                 initParticleField()
                 metronome.start()
+            }
+            TAP_BPM_KEY -> {
+                metronome.tapBpm()
             }
         }
     }
@@ -141,6 +139,14 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
+    private fun handleMetronomeValue() {
+        val intervalNumbers = metronome.intervalNumbers
+        if (lastBarCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
+            clearFrame()
+            lastBarCount = intervalNumbers.getValue(BeatInterval.FourWhole)
+        }
+    }
+
     private fun showBeatCounter(intervalNumbers: Map<BeatInterval, Int>) {
         var formattedCounter = ""
 
@@ -168,9 +174,12 @@ class PApplet : processing.core.PApplet() {
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
         private const val DRAW_BACKGROUND_ON_DRAW = true
         private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0.01f
+
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
-        private const val CLEAR_INIT_KEY = ' '
+        private const val CLEAR_INIT_KEY = 'c'
+        private const val TAP_BPM_KEY = ' '
+
         private const val BEAT_COUNTER_DIVIDER = ' '
 
         fun runInstance() {

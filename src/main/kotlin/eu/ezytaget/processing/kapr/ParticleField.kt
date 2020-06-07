@@ -133,7 +133,7 @@ class ParticleField(private val firstParticle: Particle) {
     private fun addParticle(random: Random) = random.nextFloat() < addParticleProbability
 
     companion object {
-        private const val VERBOSE = true
+        private const val VERBOSE = false
         private const val PREFERRED_DISTANCE_PUSH_FACTOR = 1.01f
         private var debugDrawIDs = listOf<Int>()
     }
