@@ -25,11 +25,11 @@ class ParticleField(private val firstParticle: Particle) {
             val originY = worldHeight / 2f
             val offsetLength = smallestWorldLength / 8f
             val twoPi = PI.toFloat() * 2f
-            val maxParticleJitter = smallestWorldLength / 256f
-            val particleRadius = smallestWorldLength / 256f
-            val particlePushForce = particleRadius * 2f
+            val maxParticleJitter = smallestWorldLength / 512f
+            val particleRadius = smallestWorldLength / 512f
+            val particlePushForce = particleRadius * 4f
             val particleGravityToNext = -particleRadius * 0.5f
-            val maxParticleInteractionDistance = smallestWorldLength / 4f
+            val maxParticleInteractionDistance = smallestWorldLength / 6f
 
             var lastParticle: Particle? = null
             for (particleIndex in 0 until numberOfParticles) {
@@ -73,7 +73,10 @@ class ParticleField(private val firstParticle: Particle) {
             lastParticle!!.next = firstParticle!!
             firstParticle.preferredDistanceToNext =
                     firstParticle.position.dist(lastParticle.position) * PREFERRED_DISTANCE_PUSH_FACTOR
-            println("ParticleField.Builder: build(): firstParticle: $firstParticle")
+
+            if (VERBOSE) {
+                println("ParticleField.Builder: build(): firstParticle: $firstParticle")
+            }           
 
             return ParticleField(firstParticle)
         }

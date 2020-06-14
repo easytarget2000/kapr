@@ -1,10 +1,10 @@
 package eu.ezytaget.processing.kapr
 
-import eu.ezytaget.processing.kapr.metronome.BeatInterval
-import eu.ezytaget.processing.kapr.metronome.BeatMetronome
 import eu.ezytaget.processing.kapr.palettes.DuskPalette
+import eu.ezytarget.clapper.BeatInterval
 import processing.core.PConstants
 import kotlin.random.Random
+import eu.ezytarget.clapper.Clapper
 
 class PApplet : processing.core.PApplet() {
 
@@ -12,7 +12,7 @@ class PApplet : processing.core.PApplet() {
 
     private val random = Random(seed = 0)
 
-    private val metronome = BeatMetronome()
+    private val clapper = Clapper()
 
     private var waitingForClickToDraw = false
 
@@ -24,7 +24,7 @@ class PApplet : processing.core.PApplet() {
 
     private val particleAlpha = 0.01f
 
-    private var clearOnTap = true
+    private var clearOnTap = false
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -34,7 +34,7 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
-    private var lastBarCount = 0
+    private var lastBeatIntervalCount = 0
 
     override fun setup() {
         frameRate(FRAME_RATE)
@@ -42,7 +42,7 @@ class PApplet : processing.core.PApplet() {
         initParticleField()
         clearFrameWithRandomColor()
         noCursor()
-        metronome.start()
+        clapper.start()
     }
 
     override fun draw() {
@@ -54,7 +54,7 @@ class PApplet : processing.core.PApplet() {
             backgroundDrawer.draw(pApplet = this)
         }
 
-        val metronomeDidAdvance = metronome.update()
+        val metronomeDidAdvance = clapper.update()
         if (metronomeDidAdvance) {
             handleMetronomeValue()
         }
@@ -77,7 +77,7 @@ class PApplet : processing.core.PApplet() {
             CLEAR_INIT_KEY -> {
                 clearFrameWithRandomColor()
                 initParticleField()
-                metronome.start()
+                clapper.start()
             }
             TAP_BPM_KEY -> {
                 tapBpm()
@@ -142,7 +142,7 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun tapBpm() {
-        metronome.tapBpm()
+        clapper.tapBpm()
 
         if (clearOnTap) {
             clearFrame()
@@ -150,10 +150,10 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun handleMetronomeValue() {
-        val intervalNumbers = metronome.intervalNumbers
-        if (lastBarCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
+        val intervalNumbers = clapper.intervalNumbers
+        if (lastBeatIntervalCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
             clearFrame()
-            lastBarCount = intervalNumbers.getValue(BeatInterval.FourWhole)
+            lastBeatIntervalCount = intervalNumbers.getValue(BeatInterval.FourWhole )
         }
     }
 
