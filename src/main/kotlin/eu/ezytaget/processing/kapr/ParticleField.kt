@@ -13,6 +13,8 @@ class ParticleField(private val firstParticle: Particle) {
     class Builder {
         var worldWidth = 100f
         var worldHeight = 100f
+        var originX = worldWidth / 2f
+        var originY = worldHeight / 2f
         var numberOfParticles = 10
         var z = 0f
 
@@ -21,8 +23,6 @@ class ParticleField(private val firstParticle: Particle) {
 
             val smallestWorldLength = min(worldWidth, worldHeight)
 
-            val originX = worldWidth / 2f
-            val originY = worldHeight / 2f
             val offsetLength = smallestWorldLength / 8f
             val twoPi = PI.toFloat() * 2f
             val maxParticleJitter = smallestWorldLength / 512f
@@ -86,7 +86,7 @@ class ParticleField(private val firstParticle: Particle) {
 
     var addParticleProbability = 1f / 1000f
 
-    var maxNumOfParticles: Int = 768
+    var maxNumOfParticles: Int = 128
 
     fun update(random: Random) {
         var counter = 0

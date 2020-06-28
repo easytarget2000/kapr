@@ -2,13 +2,13 @@ package eu.ezytaget.processing.kapr
 
 import eu.ezytaget.processing.kapr.palettes.DuskPalette
 import eu.ezytarget.clapper.BeatInterval
+import eu.ezytarget.clapper.Clapper
 import processing.core.PConstants
 import kotlin.random.Random
-import eu.ezytarget.clapper.Clapper
 
 class PApplet : processing.core.PApplet() {
 
-    private lateinit var particleField: ParticleField
+    private val particleFields: MutableList<ParticleField> = mutableListOf()
 
     private val random = Random(seed = 0)
 
@@ -16,7 +16,7 @@ class PApplet : processing.core.PApplet() {
 
     private var waitingForClickToDraw = false
 
-    private var numberOfSlices = 128
+    private var numberOfSlices = 1
 
     private val backgroundDrawer = BackgroundDrawer(DuskPalette(), alpha = 0.01f)
 
@@ -25,6 +25,8 @@ class PApplet : processing.core.PApplet() {
     private val particleAlpha = 0.01f
 
     private var clearOnTap = false
+
+    private var gridSize = 4
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -107,15 +109,31 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun initParticleField() {
-        particleField = ParticleField.Builder().apply {
-            worldWidth = width.toFloat()
-            worldHeight = height.toFloat()
-            numberOfParticles = NUMBER_OF_PARTICLES_PER_FIELD
-        }.build()
+        val numberOfFields = gridSize * gridSize
+        val smallestScreenDimension = min(width, height).toFloat()
+        val cellSize = smallestScreenDimension / gridSize.toFloat()
+
+        (0 .. gridSize).forEach { columnIndex ->
+            (0 .. gridSize).forEach { rowIndex ->
+                val cellOriginX = cellSize * columnIndex.toFloat()
+                val cellOriginY = cellSize * rowIndex.toFloat()
+
+                val particleField = ParticleField.Builder().apply {
+                    originX = cellOriginX
+                    originY = cellOriginY
+                    worldWidth = cellSize
+                    worldHeight = cellSize
+                    numberOfParticles = NUMBER_OF_PARTICLES_PER_FIELD
+                }.build()
+                particleFields.add(particleField)
+            }
+        }
     }
 
     private fun updateAndDrawParticleField() {
-        particleField.update(random)
+        particleFields.forEach {
+            it.update(random)
+        }
 
         val yRotationOffset = frameCount.toFloat() / 10000f
 
@@ -134,10 +152,12 @@ class PApplet : processing.core.PApplet() {
             rotateY(yRotation)
             translate(-width / 2f, -height / 2f, 0f)
 
-            particleField.drawConfigured(
-                    pApplet = this,
-                    drawLine = true
-            )
+            particleFields.forEach {
+                it.drawConfigured(
+                        pApplet = this,
+                        drawLine = true
+                )
+            }
         }
     }
 
@@ -182,7 +202,7 @@ class PApplet : processing.core.PApplet() {
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
-        private const val DRAW_BACKGROUND_ON_DRAW = true
+        private const val DRAW_BACKGROUND_ON_DRAW = false
         private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0.01f
 
         private const val CLEAR_FRAME_KEY = 'x'
@@ -197,4 +217,5 @@ class PApplet : processing.core.PApplet() {
             instance.runSketch()
         }
     }
+
 }
