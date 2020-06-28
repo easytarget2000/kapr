@@ -1,5 +1,6 @@
 package eu.ezytaget.processing.kapr
 
+import processing.core.PConstants
 import processing.core.PConstants.LINES
 import processing.core.PVector
 import kotlin.math.PI
@@ -86,7 +87,7 @@ class ParticleField(private val firstParticle: Particle) {
 
     var addParticleProbability = 1f / 1000f
 
-    var maxNumOfParticles: Int = 128
+    var maxNumOfParticles: Int = 256
 
     fun update(random: Random) {
         var counter = 0
@@ -102,6 +103,26 @@ class ParticleField(private val firstParticle: Particle) {
             update(currentParticle, random)
             currentParticle = currentParticle.next
         } while (currentParticle != firstParticle)
+    }
+
+    fun drawConfiguredVolumetric(
+            pApplet: PApplet,
+            drawLine: Boolean,
+            numberOfSlices: Int = 16,
+            yRotationOffset: Float = 0f
+    ) {
+        pApplet.pushMatrix()
+
+        for (sliceIndex in 0 until numberOfSlices) {
+            val yRotation = (sliceIndex.toFloat() / numberOfSlices.toFloat() * PConstants.TWO_PI) + yRotationOffset
+            pApplet.translate(pApplet.width / 2f, pApplet.height / 2f, 0f)
+            pApplet.rotateY(yRotation)
+            pApplet.translate(-pApplet.width / 2f, -pApplet.height / 2f, 0f)
+
+            drawConfigured(pApplet, drawLine)
+        }
+
+        pApplet.popMatrix()
     }
 
     fun drawConfigured(pApplet: PApplet, drawLine: Boolean) {

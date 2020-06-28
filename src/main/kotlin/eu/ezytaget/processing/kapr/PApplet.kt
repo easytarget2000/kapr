@@ -22,11 +22,15 @@ class PApplet : processing.core.PApplet() {
 
     private var particleGray = 0f
 
-    private val particleAlpha = 0.01f
+    private val particleAlpha = 0.1f
 
     private var clearOnTap = false
 
     private var gridSize = 4
+
+    private var minGridSize = 2
+
+    private var maxGridSize = 8
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -109,6 +113,9 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun initParticleField() {
+        gridSize = random.nextInt(minGridSize, maxGridSize)
+        particleFields.clear()
+
         val smallestScreenDimension = min(width, height).toFloat()
         val cellSize = smallestScreenDimension / gridSize.toFloat()
         val xOffset = (cellSize / 2f) + ((width.toFloat() % cellSize) / 2f)
@@ -116,8 +123,8 @@ class PApplet : processing.core.PApplet() {
         val xPadding = 40f
         val yPadding = 0f
 
-        (0 .. gridSize).forEach { columnIndex ->
-            (0 .. gridSize).forEach { rowIndex ->
+        (0..gridSize).forEach { columnIndex ->
+            (0..gridSize).forEach { rowIndex ->
                 val cellOriginX = xOffset + ((cellSize + xPadding) * columnIndex.toFloat())
                 val cellOriginY = yOffset + ((cellSize + yPadding) * rowIndex.toFloat())
 
@@ -138,7 +145,7 @@ class PApplet : processing.core.PApplet() {
             it.update(random)
         }
 
-        val yRotationOffset = frameCount.toFloat() / 10000f
+        val yRotationOffset = frameCount.toFloat() / 1000f
 
         if (random.nextFloat() < CHANGE_PARTICLE_GRAY_PROBABILITY) {
             particleGray = if (random.nextBoolean()) {
@@ -149,18 +156,11 @@ class PApplet : processing.core.PApplet() {
         }
         stroke(particleGray, particleAlpha)
 
-        for (sliceIndex in 0 until numberOfSlices) {
-            val yRotation = (sliceIndex.toFloat() / numberOfSlices.toFloat() * PConstants.TWO_PI) + yRotationOffset
-            translate(width / 2f, height / 2f, 0f)
-            rotateY(yRotation)
-            translate(-width / 2f, -height / 2f, 0f)
-
-            particleFields.forEach {
-                it.drawConfigured(
-                        pApplet = this,
-                        drawLine = true
-                )
-            }
+        particleFields.forEach {
+            it.drawConfigured(
+                    pApplet = this,
+                    drawLine = true
+            )
         }
     }
 
@@ -174,9 +174,17 @@ class PApplet : processing.core.PApplet() {
 
     private fun handleMetronomeValue() {
         val intervalNumbers = clapper.intervalNumbers
-        if (lastBeatIntervalCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
-//            clearFrame()
-            lastBeatIntervalCount = intervalNumbers.getValue(BeatInterval.FourWhole )
+        if (lastBeatIntervalCount != intervalNumbers.getValue(BeatInterval.TwoWhole)) {
+            if (!maybe { clearFrame() }) {
+                maybe {
+                    initParticleField()
+                }
+                maybe {
+                    clearFrameWithRandomColor()
+                }
+            }
+
+            lastBeatIntervalCount = intervalNumbers.getValue(BeatInterval.TwoWhole)
         }
     }
 
@@ -205,7 +213,7 @@ class PApplet : processing.core.PApplet() {
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
-        private const val DRAW_BACKGROUND_ON_DRAW = false
+        private const val DRAW_BACKGROUND_ON_DRAW = true
         private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0.01f
 
         private const val CLEAR_FRAME_KEY = 'x'
