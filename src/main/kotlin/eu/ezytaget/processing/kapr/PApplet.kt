@@ -109,14 +109,17 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun initParticleField() {
-        val numberOfFields = gridSize * gridSize
         val smallestScreenDimension = min(width, height).toFloat()
         val cellSize = smallestScreenDimension / gridSize.toFloat()
+        val xOffset = (cellSize / 2f) + ((width.toFloat() % cellSize) / 2f)
+        val yOffset = (cellSize / 2f) + ((height.toFloat() % cellSize) / 2f)
+        val xPadding = 40f
+        val yPadding = 0f
 
         (0 .. gridSize).forEach { columnIndex ->
             (0 .. gridSize).forEach { rowIndex ->
-                val cellOriginX = cellSize * columnIndex.toFloat()
-                val cellOriginY = cellSize * rowIndex.toFloat()
+                val cellOriginX = xOffset + ((cellSize + xPadding) * columnIndex.toFloat())
+                val cellOriginY = yOffset + ((cellSize + yPadding) * rowIndex.toFloat())
 
                 val particleField = ParticleField.Builder().apply {
                     originX = cellOriginX
@@ -172,7 +175,7 @@ class PApplet : processing.core.PApplet() {
     private fun handleMetronomeValue() {
         val intervalNumbers = clapper.intervalNumbers
         if (lastBeatIntervalCount != intervalNumbers.getValue(BeatInterval.FourWhole)) {
-            clearFrame()
+//            clearFrame()
             lastBeatIntervalCount = intervalNumbers.getValue(BeatInterval.FourWhole )
         }
     }
