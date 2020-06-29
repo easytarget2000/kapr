@@ -1,6 +1,6 @@
 package eu.ezytaget.processing.kapr
 
-import eu.ezytaget.processing.kapr.palettes.DuskPalette
+import eu.ezytaget.processing.kapr.palettes.AllBlackPalette
 import eu.ezytarget.clapper.BeatInterval
 import eu.ezytarget.clapper.Clapper
 import processing.core.PConstants
@@ -18,11 +18,11 @@ class PApplet : processing.core.PApplet() {
 
     private var numberOfSlices = 1
 
-    private val backgroundDrawer = BackgroundDrawer(DuskPalette(), alpha = 0.01f)
+    private val backgroundDrawer = BackgroundDrawer(AllBlackPalette(), alpha = 0.01f)
 
-    private var particleGray = 0f
+    private var particleGray = 1f
 
-    private val particleAlpha = 0.1f
+    private val particleAlpha = 1f
 
     private var clearOnTap = false
 
@@ -30,7 +30,15 @@ class PApplet : processing.core.PApplet() {
 
     private var minGridSize = 2
 
-    private var maxGridSize = 8
+    private var maxGridSize = 3
+
+    private var laserClearing = true
+
+    private var lastLaserClearMillis = 0L
+
+    private var laserClearMillisInterval = 120L
+
+    private var listenedBeatInterval = BeatInterval.TwoWhole
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -39,8 +47,6 @@ class PApplet : processing.core.PApplet() {
             size(WIDTH, HEIGHT, RENDERER)
         }
     }
-
-    private var lastBeatIntervalCount = 0
 
     override fun setup() {
         frameRate(FRAME_RATE)
@@ -60,10 +66,15 @@ class PApplet : processing.core.PApplet() {
             backgroundDrawer.draw(pApplet = this)
         }
 
-        val metronomeDidAdvance = clapper.update()
-        if (metronomeDidAdvance) {
-            handleMetronomeValue()
+        if (laserClearing) {
+            val now = System.currentTimeMillis()
+            if (now - lastLaserClearMillis > laserClearMillisInterval) {
+                backgroundDrawer.draw(pApplet = this, alpha = 1f)
+                lastLaserClearMillis = now
+            }
         }
+        
+        updateClapper()
 
         updateAndDrawParticleField()
 
@@ -117,14 +128,15 @@ class PApplet : processing.core.PApplet() {
         particleFields.clear()
 
         val smallestScreenDimension = min(width, height).toFloat()
-        val cellSize = smallestScreenDimension / gridSize.toFloat()
-        val xOffset = (cellSize / 2f) + ((width.toFloat() % cellSize) / 2f)
-        val yOffset = (cellSize / 2f) + ((height.toFloat() % cellSize) / 2f)
-        val xPadding = 40f
+        val cellSize = smallestScreenDimension / gridSize
+        val cellSizeHalf = cellSize / 2f
+        val xOffset = cellSizeHalf + (((width.toFloat() / cellSize) - gridSize) * cellSizeHalf)
+        val yOffset = cellSizeHalf + (((height.toFloat() / cellSize) - gridSize) * cellSizeHalf)
+        val xPadding = 0f
         val yPadding = 0f
 
-        (0..gridSize).forEach { columnIndex ->
-            (0..gridSize).forEach { rowIndex ->
+        (0 until gridSize).forEach { columnIndex ->
+            (0 until gridSize).forEach { rowIndex ->
                 val cellOriginX = xOffset + ((cellSize + xPadding) * columnIndex.toFloat())
                 val cellOriginY = yOffset + ((cellSize + yPadding) * rowIndex.toFloat())
 
@@ -145,7 +157,7 @@ class PApplet : processing.core.PApplet() {
             it.update(random)
         }
 
-        val yRotationOffset = frameCount.toFloat() / 1000f
+        val yRotationOffset = frameCount.toFloat() * 2f
 
         if (random.nextFloat() < CHANGE_PARTICLE_GRAY_PROBABILITY) {
             particleGray = if (random.nextBoolean()) {
@@ -157,9 +169,11 @@ class PApplet : processing.core.PApplet() {
         stroke(particleGray, particleAlpha)
 
         particleFields.forEach {
-            it.drawConfigured(
+            it.drawConfiguredVolumetric(
                     pApplet = this,
-                    drawLine = true
+                    drawLine = true,
+                    numberOfSlices = 1,
+                    yRotationOffset = yRotationOffset
             )
         }
     }
@@ -172,19 +186,19 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
-    private fun handleMetronomeValue() {
-        val intervalNumbers = clapper.intervalNumbers
-        if (lastBeatIntervalCount != intervalNumbers.getValue(BeatInterval.TwoWhole)) {
-            if (!maybe { clearFrame() }) {
-                maybe {
-                    initParticleField()
-                }
-                maybe {
-                    clearFrameWithRandomColor()
-                }
-            }
+    private fun updateClapper() {
+        val reactToClapper = clapper.update(listenedBeatInterval)
+        if (!reactToClapper) {
+            return
+        }
 
-            lastBeatIntervalCount = intervalNumbers.getValue(BeatInterval.TwoWhole)
+        if (!maybe { clearFrame() }) {
+            maybe {
+                initParticleField()
+            }
+            maybe {
+                clearFrameWithRandomColor()
+            }
         }
     }
 
@@ -213,8 +227,8 @@ class PApplet : processing.core.PApplet() {
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
         private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
-        private const val DRAW_BACKGROUND_ON_DRAW = true
-        private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0.01f
+        private const val DRAW_BACKGROUND_ON_DRAW = false
+        private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0f//0.01f
 
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'

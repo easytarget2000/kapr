@@ -9,7 +9,11 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.random.Random
 
-class ParticleField(private val firstParticle: Particle) {
+class ParticleField(
+        private val firstParticle: Particle,
+        private val originX: Float,
+        private val originY: Float
+) {
 
     class Builder {
         var worldWidth = 100f
@@ -79,7 +83,7 @@ class ParticleField(private val firstParticle: Particle) {
                 println("ParticleField.Builder: build(): firstParticle: $firstParticle")
             }           
 
-            return ParticleField(firstParticle)
+            return ParticleField(firstParticle, originX, originY)
         }
     }
 
@@ -115,9 +119,9 @@ class ParticleField(private val firstParticle: Particle) {
 
         for (sliceIndex in 0 until numberOfSlices) {
             val yRotation = (sliceIndex.toFloat() / numberOfSlices.toFloat() * PConstants.TWO_PI) + yRotationOffset
-            pApplet.translate(pApplet.width / 2f, pApplet.height / 2f, 0f)
+            pApplet.translate(originX / 2f, originY / 2f, 0f)
             pApplet.rotateY(yRotation)
-            pApplet.translate(-pApplet.width / 2f, -pApplet.height / 2f, 0f)
+//            pApplet.translate(-originX / 2f, -originY / 2f, 0f)
 
             drawConfigured(pApplet, drawLine)
         }
@@ -132,7 +136,7 @@ class ParticleField(private val firstParticle: Particle) {
         var currentParticle = firstParticle
         do {
             if (drawLine) {
-                pApplet.vertex(currentParticle.position.x, currentParticle.position.y)
+                pApplet.vertex(originX - currentParticle.position.x, originY - currentParticle.position.y)
             } else {
                 drawPoint(currentParticle, pApplet)
             }
