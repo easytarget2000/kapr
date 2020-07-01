@@ -32,6 +32,8 @@ class PApplet : processing.core.PApplet() {
 
     private var maxGridSize = 8
 
+    private var listenedBeatInterval = BeatInterval.TwoWhole
+    
     override fun settings() {
         if (FULL_SCREEN) {
             fullScreen(RENDERER)
@@ -60,10 +62,7 @@ class PApplet : processing.core.PApplet() {
             backgroundDrawer.draw(pApplet = this)
         }
 
-        val metronomeDidAdvance = clapper.update()
-        if (metronomeDidAdvance) {
-            handleMetronomeValue()
-        }
+        updateClapper()
 
         updateAndDrawParticleField()
 
@@ -172,19 +171,19 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
-    private fun handleMetronomeValue() {
-        val intervalNumbers = clapper.intervalNumbers
-        if (lastBeatIntervalCount != intervalNumbers.getValue(BeatInterval.TwoWhole)) {
-            if (!maybe { clearFrame() }) {
-                maybe {
-                    initParticleField()
-                }
-                maybe {
-                    clearFrameWithRandomColor()
-                }
-            }
+    private fun updateClapper() {
+        val reactToClapper = clapper.update(listenedBeatInterval)
+        if (!reactToClapper) {
+            return
+        }
 
-            lastBeatIntervalCount = intervalNumbers.getValue(BeatInterval.TwoWhole)
+        if (!maybe { clearFrame() }) {
+            maybe {
+                initParticleField()
+            }
+            maybe {
+                clearFrameWithRandomColor()
+            }
         }
     }
 
