@@ -8,32 +8,23 @@ import kotlin.random.Random
 
 class PApplet : processing.core.PApplet() {
 
-    private val particleFields: MutableList<ParticleField> = mutableListOf()
-
-    private val random = Random(seed = 0)
-
-    private val clapper = Clapper()
-
     private var waitingForClickToDraw = false
-
-    private var numberOfSlices = 1
-
+    private val random = Random(seed = 0)
+    private val clapper = Clapper()
     private val backgroundDrawer = BackgroundDrawer(DuskPalette(), alpha = 0.01f)
-
-    private var particleGray = 0f
-
-    private val particleAlpha = 0.1f
-
+    private var terrainWidth = 800f
+    private var terrainDepth = 800f
+    private var terrainCellSize = 16f
+    private lateinit var terrainHeights: List<List<Float>>
+    private val numberOfColumns
+        get() = (terrainWidth / terrainCellSize).toInt()
+    private val numberOfRows
+        get() = (terrainDepth / terrainCellSize).toInt()
     private var clearOnTap = false
+    private var minTerrainZ = 0f
+    private var maxTerrainZ = 100f
+    private var terrainSmoothness = 0.2f
 
-    private var gridSize = 4
-
-    private var minGridSize = 2
-
-    private var maxGridSize = 8
-
-    private var listenedBeatInterval = BeatInterval.TwoWhole
-    
     override fun settings() {
         if (FULL_SCREEN) {
             fullScreen(RENDERER)
@@ -42,15 +33,17 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
-    private var lastBeatIntervalCount = 0
-
     override fun setup() {
         frameRate(FRAME_RATE)
         colorMode(COLOR_MODE, MAX_COLOR_VALUE)
-        initParticleField()
-        clearFrameWithRandomColor()
         noCursor()
+
+        clearFrameWithRandomColor()
+
+        clapper.bpm = 64f
         clapper.start()
+
+        setTerrainValues()
     }
 
     override fun draw() {
@@ -61,10 +54,11 @@ class PApplet : processing.core.PApplet() {
         if (DRAW_BACKGROUND_ON_DRAW) {
             backgroundDrawer.draw(pApplet = this)
         }
+        background(0f)
 
-        updateClapper()
-
-        updateAndDrawParticleField()
+//        updateClapper()
+        moveTerrainHeights()
+        drawTerrain()
 
         if (CLICK_TO_DRAW) {
             waitingForClickToDraw = true
@@ -77,11 +71,9 @@ class PApplet : processing.core.PApplet() {
                 clearFrame()
             }
             INIT_PARTICLE_FIELD_KEY -> {
-                initParticleField()
             }
             CLEAR_INIT_KEY -> {
                 clearFrameWithRandomColor()
-                initParticleField()
                 clapper.start()
             }
             TAP_BPM_KEY -> {
@@ -100,67 +92,61 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun clearFrame() {
-        backgroundDrawer.draw(pApplet = this, alpha = 1f)
+        backgroundDrawer.draw(pApplet = this)
     }
 
     private fun clearFrameWithRandomColor() {
         backgroundDrawer.drawRandomColor(
                 pApplet = this,
-                random = random,
-                alpha = 1f
+                random = random
         )
     }
 
-    private fun initParticleField() {
-        gridSize = random.nextInt(minGridSize, maxGridSize)
-        particleFields.clear()
+    private fun setTerrainValues() {
+        terrainWidth = width * 2f
+        terrainDepth = height * 4f
+    }
 
-        val smallestScreenDimension = min(width, height).toFloat()
-        val cellSize = smallestScreenDimension / gridSize.toFloat()
-        val xOffset = (cellSize / 2f) + ((width.toFloat() % cellSize) / 2f)
-        val yOffset = (cellSize / 2f) + ((height.toFloat() % cellSize) / 2f)
-        val xPadding = 40f
-        val yPadding = 0f
+    private fun moveTerrainHeights() {
+        val movementOffset = frameCount / -1f
 
-        (0..gridSize).forEach { columnIndex ->
-            (0..gridSize).forEach { rowIndex ->
-                val cellOriginX = xOffset + ((cellSize + xPadding) * columnIndex.toFloat())
-                val cellOriginY = yOffset + ((cellSize + yPadding) * rowIndex.toFloat())
-
-                val particleField = ParticleField.Builder().apply {
-                    originX = cellOriginX
-                    originY = cellOriginY
-                    worldWidth = cellSize
-                    worldHeight = cellSize
-                    numberOfParticles = NUMBER_OF_PARTICLES_PER_FIELD
-                }.build()
-                particleFields.add(particleField)
+        terrainHeights = (0 until numberOfRows).map { rowIndex ->
+            val rowHeights = (0 until numberOfColumns).map { columnIndex ->
+                val noise = noise(
+                        columnIndex.toFloat() * terrainSmoothness,
+                        (rowIndex + movementOffset) * terrainSmoothness
+                )
+                map(noise, 0f, 1f, minTerrainZ, maxTerrainZ)
             }
+            rowHeights
         }
     }
 
-    private fun updateAndDrawParticleField() {
-        particleFields.forEach {
-            it.update(random)
-        }
+    private fun drawTerrain() {
+        pushMatrix()
+        translate(width / 2f, height / 2f)
+        rotateX(PConstants.THIRD_PI)
+        translate(-terrainWidth / 2f, -terrainDepth / 2f)
 
-        val yRotationOffset = frameCount.toFloat() / 1000f
-
-        if (random.nextFloat() < CHANGE_PARTICLE_GRAY_PROBABILITY) {
-            particleGray = if (random.nextBoolean()) {
-                0f
-            } else {
-                MAX_COLOR_VALUE
+        (0 until numberOfRows - 1).forEach { rowIndex ->
+            beginShape(PConstants.TRIANGLE_STRIP)
+            (0 until numberOfColumns).forEach { columnIndex ->
+                stroke(MAX_COLOR_VALUE)
+                vertex(
+                        columnIndex * terrainCellSize,
+                        rowIndex * terrainCellSize,
+                        terrainHeights[rowIndex][columnIndex]
+                )
+                vertex(
+                        columnIndex * terrainCellSize,
+                        (rowIndex + 1) * terrainCellSize,
+                        terrainHeights[rowIndex + 1][columnIndex]
+                )
             }
+            endShape()
         }
-        stroke(particleGray, particleAlpha)
 
-        particleFields.forEach {
-            it.drawConfigured(
-                    pApplet = this,
-                    drawLine = true
-            )
-        }
+        popMatrix()
     }
 
     private fun tapBpm() {
@@ -172,14 +158,14 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun updateClapper() {
-        val reactToClapper = clapper.update(listenedBeatInterval)
+        val reactToClapper = clapper.update(BeatInterval.TwoWhole)
         if (!reactToClapper) {
             return
         }
 
         if (!maybe { clearFrame() }) {
             maybe {
-                initParticleField()
+//                initParticleField()
             }
             maybe {
                 clearFrameWithRandomColor()
@@ -187,40 +173,21 @@ class PApplet : processing.core.PApplet() {
         }
     }
 
-    private fun showBeatCounter(intervalNumbers: Map<BeatInterval, Int>) {
-        var formattedCounter = ""
-
-        formattedCounter += intervalNumbers[BeatInterval.Whole]?.rem(4)?.plus(1)
-        formattedCounter += BEAT_COUNTER_DIVIDER
-        formattedCounter += intervalNumbers[BeatInterval.Eigth]?.rem(8)?.plus(1)
-        formattedCounter += BEAT_COUNTER_DIVIDER
-        formattedCounter += intervalNumbers[BeatInterval.Sixteenth]?.rem(16)?.plus(1)
-
-        noStroke()
-        fill(0.5f, 0.1f)
-        textSize(height.toFloat())
-        text(formattedCounter, 0f, height.toFloat())
-    }
-
     companion object {
         private const val CLICK_TO_DRAW = false
-        private const val FULL_SCREEN = true
+        private const val FULL_SCREEN = false
         private const val WIDTH = 800
         private const val HEIGHT = 600
         private const val RENDERER = PConstants.P3D
         private const val COLOR_MODE = PConstants.HSB
         private const val MAX_COLOR_VALUE = 1f
         private const val FRAME_RATE = 60f
-        private const val NUMBER_OF_PARTICLES_PER_FIELD = 256
         private const val DRAW_BACKGROUND_ON_DRAW = true
-        private const val CHANGE_PARTICLE_GRAY_PROBABILITY = 0.01f
 
         private const val CLEAR_FRAME_KEY = 'x'
         private const val INIT_PARTICLE_FIELD_KEY = 'z'
         private const val CLEAR_INIT_KEY = 'c'
         private const val TAP_BPM_KEY = ' '
-
-        private const val BEAT_COUNTER_DIVIDER = ' '
 
         fun runInstance() {
             val instance = PApplet()

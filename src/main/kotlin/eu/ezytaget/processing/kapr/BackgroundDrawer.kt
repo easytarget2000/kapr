@@ -13,7 +13,7 @@ class BackgroundDrawer(private val palette: Palette, var alpha: Float = 0.1f) {
     }
 
     fun draw(pApplet: PApplet, alpha: Float = this.alpha) {
-        if (alpha < 1f) {
+        if (alpha < 0.99f) {
             pApplet.noStroke()
             pApplet.fill(pApplet.hue(rgbColor), pApplet.saturation(rgbColor), pApplet.saturation(rgbColor), alpha)
             pApplet.rect(0f, 0f, pApplet.width.toFloat(), pApplet.height.toFloat())
