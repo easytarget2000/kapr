@@ -14,7 +14,7 @@ class PApplet : processing.core.PApplet() {
     private val backgroundDrawer = BackgroundDrawer(DuskPalette(), alpha = 0.01f)
     private var terrainWidth = 800f
     private var terrainDepth = 800f
-    private var terrainCellSize = 16f
+    private var terrainCellSize = 32f
     private lateinit var terrainHeights: List<List<Float>>
     private val numberOfColumns
         get() = (terrainWidth / terrainCellSize).toInt()
@@ -22,8 +22,10 @@ class PApplet : processing.core.PApplet() {
         get() = (terrainDepth / terrainCellSize).toInt()
     private var clearOnTap = false
     private var minTerrainZ = 0f
-    private var maxTerrainZ = 100f
-    private var terrainSmoothness = 0.2f
+    private var maxTerrainZ = 400f
+    private var terrainZFactor = 1f
+    private var terrainBaseRoughness = 0.05f
+    private var terrainRoughnessOffset = 0.01f
 
     override fun settings() {
         if (FULL_SCREEN) {
@@ -37,7 +39,7 @@ class PApplet : processing.core.PApplet() {
         frameRate(FRAME_RATE)
         colorMode(COLOR_MODE, MAX_COLOR_VALUE)
         noCursor()
-
+        lights()
         clearFrameWithRandomColor()
 
         clapper.bpm = 64f
@@ -54,9 +56,9 @@ class PApplet : processing.core.PApplet() {
         if (DRAW_BACKGROUND_ON_DRAW) {
             backgroundDrawer.draw(pApplet = this)
         }
-        background(0f)
+//        background(0f)
 
-//        updateClapper()
+        updateClapper()
         moveTerrainHeights()
         drawTerrain()
 
@@ -98,7 +100,8 @@ class PApplet : processing.core.PApplet() {
     private fun clearFrameWithRandomColor() {
         backgroundDrawer.drawRandomColor(
                 pApplet = this,
-                random = random
+                random = random,
+                alpha = 1f
         )
     }
 
@@ -108,13 +111,15 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun moveTerrainHeights() {
-        val movementOffset = frameCount / -1f
+        val movementOffset = frameCount / -6f
+        val terrainRoughness = terrainBaseRoughness + terrainRoughnessOffset
+        val maxTerrainZ = maxTerrainZ * terrainZFactor
 
         terrainHeights = (0 until numberOfRows).map { rowIndex ->
             val rowHeights = (0 until numberOfColumns).map { columnIndex ->
                 val noise = noise(
-                        columnIndex.toFloat() * terrainSmoothness,
-                        (rowIndex + movementOffset) * terrainSmoothness
+                        columnIndex.toFloat() * terrainRoughness,
+                        (rowIndex + movementOffset) * terrainRoughness
                 )
                 map(noise, 0f, 1f, minTerrainZ, maxTerrainZ)
             }
@@ -128,10 +133,14 @@ class PApplet : processing.core.PApplet() {
         rotateX(PConstants.THIRD_PI)
         translate(-terrainWidth / 2f, -terrainDepth / 2f)
 
+        noStroke()
+
         (0 until numberOfRows - 1).forEach { rowIndex ->
             beginShape(PConstants.TRIANGLE_STRIP)
             (0 until numberOfColumns).forEach { columnIndex ->
-                stroke(MAX_COLOR_VALUE)
+                val progress = rowIndex.toFloat() / numberOfRows.toFloat()
+//                fill(MAX_COLOR_VALUE * progress)
+                stroke(MAX_COLOR_VALUE * progress, 0.1f)
                 vertex(
                         columnIndex * terrainCellSize,
                         rowIndex * terrainCellSize,
@@ -146,6 +155,7 @@ class PApplet : processing.core.PApplet() {
             endShape()
         }
 
+
         popMatrix()
     }
 
@@ -158,24 +168,22 @@ class PApplet : processing.core.PApplet() {
     }
 
     private fun updateClapper() {
-        val reactToClapper = clapper.update(BeatInterval.TwoWhole)
+        val reactToClapper = clapper.update(BeatInterval.Whole)
         if (!reactToClapper) {
             return
         }
 
-        if (!maybe { clearFrame() }) {
-            maybe {
-//                initParticleField()
-            }
-            maybe {
-                clearFrameWithRandomColor()
-            }
-        }
+        clearFrameWithRandomColor()
+
+//        if (!maybe { clearFrame() }) {
+//            maybe {
+//            }
+//        }
     }
 
     companion object {
         private const val CLICK_TO_DRAW = false
-        private const val FULL_SCREEN = false
+        private const val FULL_SCREEN = true
         private const val WIDTH = 800
         private const val HEIGHT = 600
         private const val RENDERER = PConstants.P3D
